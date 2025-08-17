@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Col3neg Scraper</title>
+</head>
+<body>
+  <h1>Col3neg Video Scraper</h1>
+  <input type="text" id="query" placeholder="Enter video path (e.g., watch-himanthara-episode-3-191035.html)">
+  <button onclick="fetchData()">Search</button>
+  <div id="results">
+    <h2 id="title"></h2>
+    <img id="image" src="" alt="Video Thumbnail">
+    <iframe id="video" src="" frameborder="0" allowfullscreen></iframe>
+    <h3>Related Episodes</h3>
+    <ul id="related"></ul>
+  </div>
+
+  <script>
+    async function fetchData() {
+      const query = document.getElementById('query').value;
+      const apiUrl = `/api/search?text=${encodeURIComponent(query)}`;
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        if (response.ok) {
+          document.getElementById('title').textContent = data.title || 'No title';
+          document.getElementById('image').src = data.imageLink || '';
+          document.getElementById('video').src = data.videoUrl || '';
+          
+          const relatedList = document.getElementById('related');
+          relatedList.innerHTML = '';
+          data.relatedEpisodes.forEach(episode => {
+            const li = document.createElement('li');
+            li.innerHTML = `<a href="${episode.link}">${episode.title}</a><br><img src="${episode.image}" alt="${episode.title}" width="100">`;
+            relatedList.appendChild(li);
+          });
+        } else {
+          document.getElementById('results').innerHTML = `<p>Error: ${data.error}</p>`;
+        }
+      } catch (error) {
+        document.getElementById('results').innerHTML = `<p>Failed to fetch data: ${error.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>

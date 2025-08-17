@@ -1,0 +1,13 @@
+[build]
+  command = "echo 'No build command required'"
+  publish = "public"
+  functions = "functions"
+
+[dev]
+  command = "node functions/api/search.js"
+  port = 8888
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200

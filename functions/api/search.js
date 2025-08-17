@@ -1,7 +1,7 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
+import axios from 'axios';
+import cheerio from 'cheerio';
 
-exports.handler = async (event) => {
+export default async function handler(event) {
   try {
     const query = event.queryStringParameters.text || '';
     if (!query) {
@@ -58,14 +58,18 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // Allow CORS for client-side access
+        'Access-Control-Allow-Origin': '*',
       },
       body: JSON.stringify(data),
     };
   } catch (error) {
     return {
       statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
       body: JSON.stringify({ error: 'Failed to fetch or parse data', details: error.message }),
     };
   }
-};
+}

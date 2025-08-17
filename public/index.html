@@ -10,6 +10,7 @@
   <input type="text" id="query" placeholder="Enter video path (e.g., watch-himanthara-episode-3-191035.html)">
   <button onclick="fetchData()">Search</button>
   <div id="results">
+    <p id="status">Enter a query to load results</p>
     <h2 id="title"></h2>
     <img id="image" src="" alt="Video Thumbnail">
     <iframe id="video" src="" frameborder="0" allowfullscreen></iframe>
@@ -19,28 +20,52 @@
 
   <script>
     async function fetchData() {
-      const query = document.getElementById('query').value;
-      const apiUrl = `/api/search?text=${encodeURIComponent(query)}`;
+      const query = document.getElementById('query').value.trim();
+      if (!query) {
+        document.getElementById('status').textContent = 'Please enter a valid video path';
+        return;
+      }
+
+      const statusElement = document.getElementById('status');
+      statusElement.textContent = 'Loading...';
+
       try {
-        const response = await fetch(apiUrl);
+        const response = await fetch(`/api/search?text=${encodeURIComponent(query)}`);
         const data = await response.json();
-        if (response.ok) {
-          document.getElementById('title').textContent = data.title || 'No title';
-          document.getElementById('image').src = data.imageLink || '';
-          document.getElementById('video').src = data.videoUrl || '';
-          
-          const relatedList = document.getElementById('related');
-          relatedList.innerHTML = '';
+
+        if (!response.ok) {
+          throw new Error(data.error || `HTTP error! Status: ${response.status}`);
+        }
+
+        // Update DOM with results
+        document.getElementById('title').textContent = data.title || 'No title available';
+        document.getElementById('image').src = data.imageLink || '';
+        document.getElementById('image').style.display = data.imageLink ? 'block' : 'none';
+        document.getElementById('video').src = data.videoUrl || '';
+        document.getElementById('video').style.display = data.videoUrl ? 'block' : 'none';
+        
+        const relatedList = document.getElementById('related');
+        relatedList.innerHTML = '';
+        if (data.relatedEpisodes && data.relatedEpisodes.length > 0) {
           data.relatedEpisodes.forEach(episode => {
             const li = document.createElement('li');
             li.innerHTML = `<a href="${episode.link}">${episode.title}</a><br><img src="${episode.image}" alt="${episode.title}" width="100">`;
             relatedList.appendChild(li);
           });
         } else {
-          document.getElementById('results').innerHTML = `<p>Error: ${data.error}</p>`;
+          relatedList.innerHTML = '<li>No related episodes found</li>';
         }
+        
+        statusElement.textContent = `Status: ${data.status}`;
       } catch (error) {
-        document.getElementById('results').innerHTML = `<p>Failed to fetch data: ${error.message}</p>`;
+        statusElement.textContent = `Error: ${error.message}`;
+        document.getElementById('title').textContent = '';
+        document.getElementById('image').src = '';
+        document.getElementById('image').style.display = 'none';
+        document.getElementById('video').src = '';
+        document.getElementById('video').style.display = 'none';
+        document.getElementById('related').innerHTML = '';
+        console.error('Fetch error:', error);
       }
     }
   </script>
